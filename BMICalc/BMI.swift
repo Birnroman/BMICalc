@@ -3,13 +3,23 @@ import SwiftUI
 
 struct BMI: View {
   @State var textFieldAge = ""
+  
   @State var textFieldHeight = ""
+  @State var selectedUnitsOfHeight: UnitsOfHeight = .centimeters
+  
   @State var textFieldWeight = ""
+  @State var selectedUnitsOfWeight: UnitsOfWeight = .kilograms
+  
   @State var bmi = 0.0
   @State var bmistatus: BMIStatus = .normalWeight
   @State var statusText: String = ""
+  
+  @State var deviationDescription: String = ""
+  
+  
   @State var tfBackground = Color(cgColor: #colorLiteral(red: 0.9719485641, green: 0.9719484448, blue: 0.9719485641, alpha: 1))
   @State var sheetIsVisible: Bool = false
+  @State var gender: Gender = .male
   
   var body: some View {
     ZStack {
@@ -19,20 +29,49 @@ struct BMI: View {
         VStack(spacing: 12) {
           
           // Tabs
-          GenderSelectionView()
+          HStack {
+            Button {
+              gender = .male
+            } label: {
+              Text("Мужчина")
+                .frame(maxWidth: .infinity)
+                .frame(height: 42)
+                .padding(.horizontal)
+                .background(gender == .male ? AppColors.blackBG : .white)
+                .foregroundColor(gender == .male ? .white : AppColors.blackBG)
+                .overlay(gender == .male ? RoundedRectangle(cornerRadius: 8)
+                  .stroke(AppColors.blackBG, lineWidth: 0) : RoundedRectangle(cornerRadius: 8)
+                  .stroke(AppColors.blackBG, lineWidth: 1.5))
+                .cornerRadius(8)
+            }
+            
+            Button {
+              gender = .female
+            } label: {
+              Text("Женщина")
+                .frame(maxWidth: .infinity)
+                .frame(height: 42)
+                .padding(.horizontal)
+                .background(gender == .female ? AppColors.blackBG : .white)
+                .foregroundColor(gender == .female ? .white : AppColors.blackBG)
+                .overlay(gender == .female ? RoundedRectangle(cornerRadius: 8)
+                  .stroke(AppColors.blackBG, lineWidth: 0) : RoundedRectangle(cornerRadius: 8)
+                  .stroke(AppColors.blackBG, lineWidth: 1.5))
+                .cornerRadius(8)
+            }
+            
+          }
           
           // Fields
           HStack {
             
             Text("Возраст")
               .frame(width: 100, alignment: .leading)
-            TextField(text: $textFieldAge) {
-              Text("25")
-            }
-            .frame(height: 42)
-            .padding(.horizontal, 12)
-            .background(tfBackground)
-            .cornerRadius(6)
+            TextField("25", text: $textFieldAge)
+              .frame(height: 42)
+              .padding(.horizontal, 12)
+              .background(tfBackground)
+              .cornerRadius(6)
           }
           .padding(10)
           .overlay(
@@ -53,11 +92,24 @@ struct BMI: View {
               .overlay(
                 
                 Menu(content: {
-                  Button("mm") {}
-                  Button("cm") {}
+                  Button("см") {
+                    selectedUnitsOfHeight = .centimeters
+                    goBMI()
+                  }
+                  Button("фут") {
+                    selectedUnitsOfHeight = .feet
+                    goBMI()
+                    
+                  }
+                  Button("дюйм") {
+                    selectedUnitsOfHeight = .inches
+                    goBMI()
+                    
+                  }
+                  
                 }, label: {
                   HStack(spacing: 4) {
-                    Text("см")
+                    Text(selectedUnitsOfHeight.rawValue)
                       .font(.system(size: 15))
                     
                     Image(systemName: "chevron.down")
@@ -74,12 +126,17 @@ struct BMI: View {
             RoundedRectangle(cornerRadius: 12)
               .stroke(AppColors.tfBorder, lineWidth: 1)
           )
+          .onChange(of: textFieldHeight) { oldValue, newValue in
+            if newValue.contains(",") {
+              textFieldHeight = newValue.replacingOccurrences(of: ",", with: ".")
+            }
+          }
           
           HStack {
             
             Text("Вес")
               .frame(width: 100, alignment: .leading)
-            TextField("75.5",text: $textFieldWeight)
+            TextField("70",text: $textFieldWeight)
               .frame(height: 42)
               .padding(.horizontal, 12)
               .background(tfBackground)
@@ -87,11 +144,20 @@ struct BMI: View {
               .overlay(
                 
                 Menu(content: {
-                  Button("mm") {}
-                  Button("cm") {}
+                  Button("кг") {
+                    selectedUnitsOfWeight = .kilograms
+                    goBMI()
+                    
+                  }
+                  Button("фунт") {
+                    selectedUnitsOfWeight = .pounds
+                    goBMI()
+                    
+                  }
+                  
                 }, label: {
                   HStack(spacing: 4) {
-                    Text("кг")
+                    Text(selectedUnitsOfWeight.rawValue)
                       .font(.system(size: 15))
                     
                     Image(systemName: "chevron.down")
@@ -105,6 +171,11 @@ struct BMI: View {
               .onChange(of: textFieldHeight, { oldValue, newValue in
                 goBMI()
               })
+              .onChange(of: textFieldWeight) { oldValue, newValue in
+                if newValue.contains(",") {
+                  textFieldWeight = newValue.replacingOccurrences(of: ",", with: ".")
+                }
+              }
             
           }
           .padding(10)
@@ -157,12 +228,12 @@ struct BMI: View {
                 }
                 .frame(height: 8)
                 .padding(.bottom, 15)
-                Text(statusText)
+                Text(bmiAppropiate(for: bmi) ? statusText : "")
                   .font(.system(size: 18))
                   .fontWeight(.semibold)
                   .foregroundColor(.white)
                   .frame(height: 18)
-
+                
               }
             }
             .padding(28)
@@ -187,34 +258,42 @@ struct BMI: View {
           }
           .frame(height: 50)
           .frame(maxWidth: .infinity)
-
-
+          
+          
         })
         .foregroundColor(.black.opacity(0.6))
         .background(Color.black.opacity(0.05))
         .cornerRadius(10)
         .padding(.horizontal, 20)
         .sheet(isPresented: $sheetIsVisible) {
-          PersonalAdviceView()
+          PersonalAdviceView(idealWeight: calculateIdealWeight(), deviation: deviationDescription)
+          
         }
       }
     }
-    
-    
   }
   
   
   func goBMI() {
     
+    guard var height = Double(textFieldHeight), var weight = Double(textFieldWeight) else { return }
     
-    withAnimation {
-      if let height = Double(textFieldHeight), let weight = Double(textFieldWeight) {
-        let result = weight / ((height / 100) * (height / 100))
-        bmi = bmiAppropiate(for: result) ? result : 0
-        checkStatus(bmi: bmi)
-      }
+    if selectedUnitsOfHeight == .feet {
+      height = height * 30.48
+    } else if selectedUnitsOfHeight == .inches {
+      height = height * 2.54
     }
     
+    if selectedUnitsOfWeight == .pounds {
+      weight = weight * 0.45
+    }
+    
+    let result = weight / ((height / 100) * (height / 100))
+    bmi = bmiAppropiate(for: result) ? result : 0
+    
+    withAnimation {
+      checkStatus(bmi: bmi)
+    }
   }
   
   func bmiAppropiate(for number: Double) -> Bool {
@@ -244,8 +323,58 @@ struct BMI: View {
     
     statusText = bmistatus.description
   }
+  
+  func calculateIdealWeight() -> (Double, Double, Double, UnitsOfWeight) {
+    guard var height = Double(textFieldHeight), var weight = Double(textFieldWeight) else { return (0.0, 0.0, 0.0, .kilograms) }
+    
+    var units: UnitsOfWeight = .kilograms
+    var minimumWeight: Double = 0.0
+    var maximumWeight: Double = 0.0
+    
+    if selectedUnitsOfHeight == .feet {
+      height = height * 30.48
+    } else if selectedUnitsOfHeight == .inches {
+      height = height * 2.54
+    }
+    
+    
+    if selectedUnitsOfWeight == .pounds {
+      weight = weight * 0.45
+      units = .pounds
+      minimumWeight = (0.01 * height) * (0.01 * height) * 18.5 * 2.2
+      maximumWeight = (0.01 * height) * (0.01 * height) * 24.9 * 2.2
+    } else {
+      units = .kilograms
+      minimumWeight = (0.01 * height) * (0.01 * height) * 18.5
+      maximumWeight = (0.01 * height) * (0.01 * height) * 24.9
+    }
+    
+    deviationDescription = calculateDeviation(minimum: minimumWeight, maximum: maximumWeight, weight: weight, units: units)
 
+    return (minimumWeight, maximumWeight, weight, units)
+    
+  }
+  
+  func calculateDeviation(minimum: Double, maximum: Double, weight: Double, units: UnitsOfWeight) -> String {
+    var delta: Double = 0.0
+    var description: String = ""
+    
+    if weight < minimum {
+      delta = minimum - weight
+      description = "Набрать \(String(format: "%.0f", delta)) \(units == .kilograms ? "кг" : "фунтов") можно, если следовать следующим рекомендациям:"
+    } else if weight > maximum {
+      delta = weight - maximum
+      description = "Сбросить \(String(format: "%.0f", delta)) \(units == .kilograms ? "кг" : "фунтов") можно, если следовать следующим рекомендациям:"
+    } else if weight >= minimum && weight <= maximum {
+      description = "Для поддержания нормального веса, следуйте рекомендациям:"
+    }
+    
+    return description
+    
+  }
 }
+  
+
 
 #Preview {
   BMI()
@@ -279,4 +408,20 @@ enum BMIStatus {
       
     }
   }
+}
+
+enum Gender {
+  case male
+  case female
+}
+
+enum UnitsOfHeight: String, CaseIterable {
+  case centimeters = "см"
+  case feet = "фут"
+  case inches = "дюйм"
+}
+
+enum UnitsOfWeight: String, CaseIterable {
+  case kilograms = "кг"
+  case pounds = "фунт"
 }
