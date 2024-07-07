@@ -1,7 +1,7 @@
 
 import SwiftUI
 
-struct BMI: View {
+struct BMIView: View {
   @State var textFieldAge = ""
   
   @State var textFieldHeight = ""
@@ -29,38 +29,7 @@ struct BMI: View {
         VStack(spacing: 12) {
           
           // Tabs
-          HStack {
-            Button {
-              gender = .male
-            } label: {
-              Text("Мужчина")
-                .frame(maxWidth: .infinity)
-                .frame(height: 42)
-                .padding(.horizontal)
-                .background(gender == .male ? AppColors.blackBG : .white)
-                .foregroundColor(gender == .male ? .white : AppColors.blackBG)
-                .overlay(gender == .male ? RoundedRectangle(cornerRadius: 8)
-                  .stroke(AppColors.blackBG, lineWidth: 0) : RoundedRectangle(cornerRadius: 8)
-                  .stroke(AppColors.blackBG, lineWidth: 1.5))
-                .cornerRadius(8)
-            }
-            
-            Button {
-              gender = .female
-            } label: {
-              Text("Женщина")
-                .frame(maxWidth: .infinity)
-                .frame(height: 42)
-                .padding(.horizontal)
-                .background(gender == .female ? AppColors.blackBG : .white)
-                .foregroundColor(gender == .female ? .white : AppColors.blackBG)
-                .overlay(gender == .female ? RoundedRectangle(cornerRadius: 8)
-                  .stroke(AppColors.blackBG, lineWidth: 0) : RoundedRectangle(cornerRadius: 8)
-                  .stroke(AppColors.blackBG, lineWidth: 1.5))
-                .cornerRadius(8)
-            }
-            
-          }
+          genderView
           
           // Fields
           HStack {
@@ -350,7 +319,7 @@ struct BMI: View {
     }
     
     deviationDescription = calculateDeviation(minimum: minimumWeight, maximum: maximumWeight, weight: weight, units: units)
-
+    
     return (minimumWeight, maximumWeight, weight, units)
     
   }
@@ -373,11 +342,11 @@ struct BMI: View {
     
   }
 }
-  
+
 
 
 #Preview {
-  BMI()
+  BMIView()
 }
 
 
@@ -424,4 +393,41 @@ enum UnitsOfHeight: String, CaseIterable {
 enum UnitsOfWeight: String, CaseIterable {
   case kilograms = "кг"
   case pounds = "фунт"
+}
+
+extension BMIView {
+  var genderView: some View {
+    HStack {
+      Button {
+        gender = .male
+      } label: {
+        Text("Мужчина")
+          .frame(maxWidth: .infinity)
+          .frame(height: 42)
+          .padding(.horizontal)
+          .background(gender == .male ? AppColors.blackBG : .white)
+          .foregroundColor(gender == .male ? .white : AppColors.blackBG)
+          .overlay(gender == .male ? RoundedRectangle(cornerRadius: 8)
+            .stroke(AppColors.blackBG, lineWidth: 0) : RoundedRectangle(cornerRadius: 8)
+            .stroke(AppColors.blackBG, lineWidth: 1.5))
+          .cornerRadius(8)
+      }
+      
+      Button {
+        gender = .female
+      } label: {
+        Text("Женщина")
+          .frame(maxWidth: .infinity)
+          .frame(height: 42)
+          .padding(.horizontal)
+          .background(gender == .female ? AppColors.blackBG : .white)
+          .foregroundColor(gender == .female ? .white : AppColors.blackBG)
+          .overlay(gender == .female ? RoundedRectangle(cornerRadius: 8)
+            .stroke(AppColors.blackBG, lineWidth: 0) : RoundedRectangle(cornerRadius: 8)
+            .stroke(AppColors.blackBG, lineWidth: 1.5))
+          .cornerRadius(8)
+      }
+      
+    }
+  }
 }

@@ -5,7 +5,7 @@ import SwiftUI
 struct BMICalcApp: App {
     var body: some Scene {
         WindowGroup {
-            BMI()
+            BMIView()
         }
     }
 }
