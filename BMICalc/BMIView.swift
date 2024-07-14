@@ -58,37 +58,7 @@ struct BMIView: View {
               .padding(.horizontal, 12)
               .background(tfBackground)
               .cornerRadius(6)
-              .overlay(
-                
-                Menu(content: {
-                  Button("см") {
-                    selectedUnitsOfHeight = .centimeters
-                    goBMI()
-                  }
-                  Button("фут") {
-                    selectedUnitsOfHeight = .feet
-                    goBMI()
-                    
-                  }
-                  Button("дюйм") {
-                    selectedUnitsOfHeight = .inches
-                    goBMI()
-                    
-                  }
-                  
-                }, label: {
-                  HStack(spacing: 4) {
-                    Text(selectedUnitsOfHeight.rawValue)
-                      .font(.system(size: 15))
-                    
-                    Image(systemName: "chevron.down")
-                      .font(.system(size: 11))
-                      .padding(.top, 3)
-                  }
-                  .foregroundColor(AppColors.blackBG)
-                }).padding(.trailing, 10),
-                alignment: .trailing
-              )
+
           }
           .padding(10)
           .overlay(
@@ -110,33 +80,7 @@ struct BMIView: View {
               .padding(.horizontal, 12)
               .background(tfBackground)
               .cornerRadius(6)
-              .overlay(
-                
-                Menu(content: {
-                  Button("кг") {
-                    selectedUnitsOfWeight = .kilograms
-                    goBMI()
-                    
-                  }
-                  Button("фунт") {
-                    selectedUnitsOfWeight = .pounds
-                    goBMI()
-                    
-                  }
-                  
-                }, label: {
-                  HStack(spacing: 4) {
-                    Text(selectedUnitsOfWeight.rawValue)
-                      .font(.system(size: 15))
-                    
-                    Image(systemName: "chevron.down")
-                      .font(.system(size: 11))
-                      .padding(.top, 3)
-                  }
-                  .foregroundColor(AppColors.blackBG)
-                }).padding(.trailing, 10),
-                alignment: .trailing
-              )
+
               .onChange(of: textFieldHeight, { oldValue, newValue in
                 goBMI()
               })
